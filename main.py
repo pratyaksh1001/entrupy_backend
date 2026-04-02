@@ -19,7 +19,8 @@ timed_cache=cachetools.TTLCache(maxsize=100,ttl=3600)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://entrupy-frontend.vercel.app"],    allow_credentials=True,
+    allow_origins=["https://entrupy-frontend.vercel.app",],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
