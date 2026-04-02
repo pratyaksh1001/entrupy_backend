@@ -1,6 +1,6 @@
 from asyncio import current_task
 from urllib import request
-
+import os
 from fastapi import FastAPI,Request
 import bcrypt
 import datetime
@@ -8,6 +8,8 @@ import sqlite3 as sql
 import cachetools
 import jwt
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+load_dotenv()
 
 connection=sql.connect("db.sqlite3")
 cursor=connection.cursor()
@@ -15,11 +17,9 @@ SECRET_KEY = "pratyaksh"
 app = FastAPI()
 timed_cache=cachetools.TTLCache(maxsize=100,ttl=3600)
 
-# Wildcard "*" cannot be used with allow_credentials=True (browser CORS rules).
-# Regex matches any Origin so each request gets a reflected Access-Control-Allow-Origin.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000","http://127.0.0.1:3000"],
+    allow_origins=[os.environ.get("FRONT_END"),],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
