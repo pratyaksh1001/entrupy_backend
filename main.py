@@ -1,3 +1,6 @@
+from asyncio import current_task
+from urllib import request
+
 from fastapi import FastAPI,Request
 import bcrypt
 import datetime
@@ -16,7 +19,7 @@ timed_cache=cachetools.TTLCache(maxsize=100,ttl=3600)
 # Regex matches any Origin so each request gets a reflected Access-Control-Allow-Origin.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*","http://localhost:3000"],
+    allow_origins=["http://localhost:3000","http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -123,6 +126,93 @@ async def get_product(request: Request, pID: str):
     images=cursor.fetchall()
     images=[image for _,image in images]
     history=[i[1] for i in history]
+    product={}
+    product["pID"]=pID
+    product["product"]=result[1]
+    product["price"]=result[2]
+    product["category"]=result[-2]
+    product["brand"]=result[-3]
     print(history)
     print(images)
-    return {"success":True,"images":images,"history":history}
+    return {"success":True,"images":images,"history":history,"product":product}
+
+
+
+@app.post("/admin_login")
+async def admin_login(request: Request):
+    data = await request.json()
+    print(data)
+    email = data["email"]
+    password = data["password"]
+    cursor.execute("select * from admin where email=?", (email,))
+    result = cursor.fetchone()
+    if result:
+        hashed_pass = result[1]
+        if bcrypt.checkpw(password.encode("utf-8"), hashed_pass):
+            print("login success")
+            token = jwt.encode(
+                {"email": email},
+                SECRET_KEY,
+                algorithm="HS256"
+            )
+            timed_cache[token] = {"email": email, "user_name": result[2],"role":"admin"}
+
+            return {
+                "message": "Login Successful",
+                "user_name": result[2],
+                "success": True,
+                "token": token
+            }
+        else:
+            return {"message": "Wrong Password", "success": False}
+    else:
+        return {"message": "User Not Found", "success": False}
+
+@app.post("/admin_auth")
+async def admin_auth(request: Request):
+    data=await request.json()
+    token=data["token"]
+    if token in timed_cache:
+        cached_data=timed_cache[token]
+        if cached_data["role"]=="admin":
+            return {"success":True}
+    else:
+        return {"success":False}
+
+
+@app.get("/tables")
+def get_tables(request: Request):
+
+    table_names=["prod_price","product","user","prod_img"]
+    return {"success":True,"tables":table_names}
+
+
+@app.post("/{table}")
+async def return_table(request: Request, table: str):
+    data=await request.json()
+    token=data["token"]
+    print(table)
+    email=timed_cache[token]["email"]
+    print(email)
+    cursor.execute(f"select * from {table}")
+    columns=cursor.description
+    columns=[i[0] for i in columns]
+    print(columns)
+    rows=cursor.fetchmany(10)
+    print(rows)
+    return {"success":True,"data":rows,"columns":columns}
+
+@app.post("/admin/search")
+async def admin_search(request: Request):
+    data=await request.json()
+    print(data)
+    token=data["token"]
+    query=data["query"]
+    column=data["column"]
+    table=data["table"]
+    cursor.execute(f"select * from {table} where {column} like '%{query}%'")
+    result=cursor.fetchall()
+    des=cursor.description
+    columns=[column[0] for column in des]
+    print(result)
+    return {"success":True,"data":result,"columns":columns}

@@ -4,10 +4,10 @@ import datetime
 connection=sql.connect("db.sqlite3")
 
 cursor=connection.cursor()
-
+cursor.execute("create table if not exists admin(email text primary key,password text,user_name text)")
 cursor.execute('create table if not exists product(pID text primary key, product text,price float, last_updated timestamp, brand text,category text,url text)')
 cursor.execute("create table if not exists prod_img(pID text,url text)")
-cursor.execute("create table if not exists prod_price(pID text,updated_price float,updated_at timestamp)")
+cursor.execute("create table if not exists prod_price(pID text,updated_price float,updated_at timestamp,changed_by text)")
 cursor.execute("create table if not exists user(email text primary key,password text,user_name text,age int,user_created_at timestamp,request_limit int)")
 cursor.execute("create table if not exists user_logs(email text,used_at timestamp,api_tokens int)")
 connection.commit()
