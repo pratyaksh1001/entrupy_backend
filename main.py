@@ -68,7 +68,7 @@ async def login(request: Request):
                 algorithm="HS256"
             )
             timed_cache[token] = {"email": email, "user_name": result[2],"remaining_tokens":result[-1]}
-
+            connection.commit()
             return {
                 "message": "Login Successful",
                 "user_name": result[2],
@@ -112,6 +112,7 @@ async def product_list(request: Request):
                 d["brand"]=product[-3]
                 d["url"]=product[-1]
                 products.append(d)
+                connection.commit()
             return {"success":True,"data":products}
         else:
             return {"success":False}
@@ -148,6 +149,7 @@ async def get_product(request: Request, pID: str):
         data.append({time_stamps[i]:prices[i]})
     print(history)
     print(images)
+    connection.commit()
     return {"success":True,"images":images,"product":product,"data":data}
 
 
@@ -170,7 +172,6 @@ async def admin_login(request: Request):
                 algorithm="HS256"
             )
             timed_cache[token] = {"email": email, "user_name": result[2],"role":"admin"}
-
             return {
                 "message": "Login Successful",
                 "user_name": result[2],
