@@ -1,16 +1,21 @@
 # Entrupy API (Backend)
 
+## Admin Credentials
+
+- Email: pratyakshkarmahe@gmail.com  
+- Password: admin
+
 REST API built with **FastAPI** over **SQLite**. It handles user authentication, product search and detail views, usage limits, and admin operations.
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.14
 - Dependencies: FastAPI, Uvicorn (ASGI server), `python-dotenv`, `bcrypt`, `PyJWT`, `cachetools`, and SQLite (stdlib).
 
 Run the app (from this directory):
 
 ```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+fastapi run main.py
 ```
 
 Ensure `db.sqlite3` exists and tables are created (see **Database schema**). The companion script `data_ingestion.py` can create tables and seed sample data when used as intended in this project.
