@@ -26,6 +26,7 @@ for i in range(1,31):
         prod=data["model"]
         category="belts"
         cursor.execute("insert into product values(?,?,?,?,?,?,?)",(pID,prod,price,datetime.datetime.now(),brand,category,url))
+        cursor.execute("insert into prod_price values(?,?,?,?)",(pID,price,datetime.datetime.now(),"during_data_ingestion"))
         images = data["main_images"]
         for image in images:
             cursor.execute("insert into prod_img values(?,?)", (pID, image["url"]))
@@ -44,7 +45,7 @@ for i in range(1,31):
         url=data["image_url"]
         category=data["metadata"]["garment_type"]
         cursor.execute("insert into product values(?,?,?,?,?,?,?)",(pID,prod,price,datetime.datetime.now(),brand,category,url))
-
+        cursor.execute("insert into prod_price values(?,?,?,?)",(pID, price, datetime.datetime.now(), "during_data_ingestion"))
         images = data["main_images"]
         for image in images:
             cursor.execute("insert into prod_img values(?,?)", (pID, image["url"]))
@@ -62,7 +63,8 @@ for i in range(1,31):
         pID = data["product_id"]
         url = data["image_url"]
         category = data["metadata"]["style"]
-        cursor.execute("insert into product values(?,?,?,?,?,?,?)", (pID, prod, price, datetime.datetime.now(), brand,category,url))
+        cursor.execute("insert into product values(?,?,?,?,?,?,?)",(pID, prod, price, datetime.datetime.now(), brand,category,url))
+        cursor.execute("insert into prod_price values(?,?,?,?)",(pID, price, datetime.datetime.now(), "during_data_ingestion"))
         images = data["main_images"]
         for image in images:
             cursor.execute("insert into prod_img values(?,?)", (pID, image["url"]))

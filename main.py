@@ -116,25 +116,39 @@ async def product_list(request: Request):
         else:
             return {"success":False}
 
-@app.get("/product/{pID}")
+@app.post("/product/{pID}")
 async def get_product(request: Request, pID: str):
+
+    data=await request.json()
+    token=data["token"]
+    if timed_cache[token]["remaining_tokens"]>0:
+        timed_cache[token]["remaining_tokens"]-=5
+    else:
+        return {"success":False,"error":"tokens exhausted, kindly wait"}
+
     cursor.execute("select * from product where pID=?",(pID,))
     result=cursor.fetchone()
-    cursor.execute("select * from prod_price where pID=? order by updated_at",(pID,))
+    cursor.execute(
+        "select * from prod_price where pID=? order by updated_at",(pID,))
     history=cursor.fetchall()
+    print(history)
     cursor.execute("select * from prod_img where pID=?",(pID,))
     images=cursor.fetchall()
     images=[image for _,image in images]
-    history=[i[1] for i in history]
+    prices=[i[1] for i in history]
+    time_stamps=[i[2] for i in history]
     product={}
     product["pID"]=pID
     product["product"]=result[1]
     product["price"]=result[2]
     product["category"]=result[-2]
     product["brand"]=result[-3]
+    data=[]
+    for i in range(len(history)):
+        data.append({time_stamps[i]:prices[i]})
     print(history)
     print(images)
-    return {"success":True,"images":images,"history":history,"product":product}
+    return {"success":True,"images":images,"product":product,"data":data}
 
 
 
@@ -216,3 +230,23 @@ async def admin_search(request: Request):
     columns=[column[0] for column in des]
     print(result)
     return {"success":True,"data":result,"columns":columns}
+
+@app.post("/admin/update")
+async def admin_modification(request: Request):
+    data=await request.json()
+    print(data)
+    token=data["token"]
+    column = data["column"]
+    table = data["table"]
+    updated_val=data["value"]
+    pID=data["pID"]
+    if timed_cache[token]["role"]=="admin":
+        cursor.execute(
+            f"UPDATE {table} SET {column}=? WHERE pID=?",
+            (updated_val, pID)
+        )
+        if column=="price":
+            cursor.execute("insert into prod_price values(?,?,?,?)",(pID,updated_val,datetime.datetime.now(),timed_cache[token]["email"]))
+        connection.commit()
+        return {"success":True,"data":updated_val,"pID":pID}
+    return {"success":False}
